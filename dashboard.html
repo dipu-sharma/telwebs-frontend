@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <style>
+        .auth-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 600px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding-bottom: 50px;
+        }
+
+        .marks-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .marks-table th,
+        .marks-table td {
+            padding: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .add-mark-btn {
+            margin-top: 10px;
+        }
+
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+        }
+
+        .toast {
+            margin-bottom: 10px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .toast-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .toast-body {
+            padding: 0.75rem;
+        }
+
+        .dropdown-menu {
+            z-index: 1050;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            display: none;
+            background-color: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            min-width: 100px;
+        }
+        .modal-dialog{
+            padding: 20px;
+            width: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStudentModalLabel">Add New Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStudentForm">
+                        <div class="mb-3">
+                            <label for="studentName" class="form-label">Student Name*</label>
+                            <input type="text" class="form-control" id="studentName" required>
+                        </div>
+                        <input type="hidden" id="teacherId">
+
+                        <h5>Subject Marks</h5>
+                        <div id="marksContainer">
+                            <div class="mark-row mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Subject Name*</label>
+                                        <input type="text" class="form-control subject-name" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Mark*</label>
+                                        <input type="number" class="form-control mark-value" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger remove-mark-btn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary add-mark-btn" id="addMarkBtn">
+                            <i class="bi bi-plus"></i> Add Mark
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveStudentBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStudentForm">
+                        <input type="hidden" id="editStudentId">
+                        <input type="hidden" id="editTeacherId">
+                        <div class="mb-3">
+                            <label for="editStudentName" class="form-label">Student Name*</label>
+                            <input type="text" class="form-control" id="editStudentName" required>
+                        </div>
+
+                        <h5>Subject Marks</h5>
+                        <div id="editMarksContainer">
+                            <!-- Mark rows will be added here dynamically -->
+                        </div>
+                        <button type="button" class="btn btn-secondary add-mark-btn" id="addEditMarkBtn">
+                            <i class="bi bi-plus"></i> Add Mark
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="updateStudentBtn">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteStudentModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this student?</p>
+                    <input type="hidden" id="deleteStudentId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewMarksModal" tabindex="-1" aria-labelledby="viewMarksModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewMarksModalLabel">Student Marks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="studentNameTitle"></h6>
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Mark</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marksTableBody">
+                            <!-- Marks will be displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><span style="color: #c90f0f; font-weight: bold;">TelWebs.</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto" id="navLinks">
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Student Dashboard</h1>
+
+                <!-- Table controls (search and add button) -->
+                <div class="table-controls d-flex justify-content-between mb-3">
+                    <div class="input-group" style="width: 300px;">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search students...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    
+                </div>
+
+                <!-- Student Table -->
+                <div id="dashboardContent">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Student Name</th>
+                                    <th scope="col">Subject</th>
+                                    <th scope="col">Mark</th>
+                                    <th scope="col" style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody">
+                                <!-- Student data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination links will be added here -->
+                        </ul>
+                    </nav>
+
+                    <div class="pagination-info text-center mt-2" id="paginationInfo">
+                        Showing 0 to 0 of 0 entries
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="background-color: #000000; color: #ffffff;" id="addStudentBtn">
+                    <i class="bi bi-plus-circle" ></i> Add Student
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-5 p-3 bg-light text-center">
+        <p>Copyright &copy; 2025</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const is_authenticated = localStorage.getItem('is_authenticated');
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+            const navLinks = document.getElementById('navLinks');
+            const toastContainer = document.getElementById('toastContainer');
+
+            const studentTableBody = document.getElementById('studentTableBody');
+            const pagination = document.getElementById('pagination');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+
+            const addStudentBtn = document.getElementById('addStudentBtn');
+            const saveStudentBtn = document.getElementById('saveStudentBtn');
+            const updateStudentBtn = document.getElementById('updateStudentBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const addMarkBtn = document.getElementById('addMarkBtn');
+            const addEditMarkBtn = document.getElementById('addEditMarkBtn');
+
+            let currentPage = 1;
+            const limit = 10;
+            let totalStudents = 0;
+            let currentSearch = '';
+
+            if (is_authenticated && token && user) {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link active" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutLink">Logout</a>
+                    </li>
+                `;
+
+                document.getElementById('logoutLink')?.addEventListener('click', logout);
+
+                loadStudents();
+
+                setTimeout(showWelcomeToast, 3000);
+            } else {
+                window.location.href = 'index.html';
+            }
+
+            addStudentBtn.addEventListener('click', showAddStudentModal);
+            saveStudentBtn.addEventListener('click', addStudent);
+            updateStudentBtn.addEventListener('click', updateStudent);
+            confirmDeleteBtn.addEventListener('click', deleteStudent);
+            searchBtn.addEventListener('click', performSearch);
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            addMarkBtn.addEventListener('click', addMarkRow);
+            addEditMarkBtn.addEventListener('click', addEditMarkRow);
+
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-mark-btn')) {
+                    e.target.closest('.mark-row').remove();
+                }
+            });
+
+            function logout() {
+                localStorage.removeItem('is_authenticated');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+            }
+
+            function showWelcomeToast() {
+                showToast('Welcome', `You have successfully logged in as ${user.name || 'User'}!`, 'success');
+            }
+
+            function showToast(title, message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = 'toast show';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+
+                let icon = 'bi-info-circle';
+                if (type === 'success') icon = 'bi-check-circle';
+                if (type === 'error') icon = 'bi-exclamation-circle';
+                if (type === 'warning') icon = 'bi-exclamation-triangle';
+
+                let headerClass = 'bg-primary text-white';
+                if (type === 'success') headerClass = 'bg-success text-white';
+                if (type === 'error') headerClass = 'bg-danger text-white';
+                if (type === 'warning') headerClass = 'bg-warning text-dark';
+
+                toast.innerHTML = `
+                    <div class="toast-header ${headerClass}">
+                        <i class="bi ${icon} me-2"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <small class="text-white-50">Just now</small>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                `;
+
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000);
+
+                toast.querySelector('.btn-close').addEventListener('click', () => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 500);
+                });
+            }
+
+            function loadStudents(page = 1, search = '') {
+                currentPage = page;
+                currentSearch = search;
+                const url = new URL('http://localhost:8000/all-student');
+                url.searchParams.append('is_pagination', true);
+                url.searchParams.append('limit', limit);
+                url.searchParams.append('skip', (page - 1) * limit);
+                if (search) {
+                    url.searchParams.append('search', search);
+                }
+
+                fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const flattenedData = [];
+                        data.students.forEach(student => {
+                            if (student.subject_marks && student.subject_marks.length > 0) {
+                                student.subject_marks.forEach(mark => {
+                                    flattenedData.push({
+                                        student_id: student.id,
+                                        student_name: student.student_name,
+                                        subject_name: mark.subject_name,
+                                        mark: mark.mark,
+                                        mark_id: mark.id
+                                    });
+                                });
+                            } else {
+                                flattenedData.push({
+                                    student_id: student.id,
+                                    student_name: student.student_name,
+                                    subject_name: 'No subjects',
+                                    mark: '',
+                                    mark_id: null
+                                });
+                            }
+                        });
+
+                        totalStudents = flattenedData.length || 0;
+                        renderStudents(flattenedData);
+                        renderPagination();
+                        updatePaginationInfo();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching students:', error);
+                        showToast('Error', 'Failed to load students. Please try again.', 'error');
+                    });
+            }
+
+            function renderStudents(students) {
+                studentTableBody.innerHTML = '';
+
+                if (students.length === 0) {
+                    studentTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center">No students found</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${student.student_name || ''}</td>
+                    <td>${student.subject_name || ''}</td>
+                    <td>${student.mark || ''}</td>
+                    <td style="text-align: right;">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-dark rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item edit-btn" href="#" data-id="${student.student_id}" data-mark-id="${student.mark_id}">
+                                        Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item delete-btn" href="#" data-id="${student.student_id}" data-mark-id="${student.mark_id}">
+                                        Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                `;
+                    studentTableBody.appendChild(row);
+                });
+
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => showEditStudentModal(btn.dataset.id, btn.dataset.markId));
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => showDeleteStudentModal(btn.dataset.id, btn.dataset.markId));
+                });
+            }
+
+            function renderPagination() {
+                pagination.innerHTML = '';
+                const totalPages = Math.ceil(totalStudents / limit);
+
+                if (totalPages <= 1) return;
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous">&laquo;</a>`;
+                prevLi.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        loadStudents(currentPage - 1, currentSearch);
+                    }
+                });
+                pagination.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                    li.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (i !== currentPage) {
+                            loadStudents(i, currentSearch);
+                        }
+                    });
+                    pagination.appendChild(li);
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next">&raquo;</a>`;
+                nextLi.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) {
+                        loadStudents(currentPage + 1, currentSearch);
+                    }
+                });
+                pagination.appendChild(nextLi);
+            }
+
+            function updatePaginationInfo() {
+                const start = (currentPage - 1) * limit + 1;
+                const end = Math.min(currentPage * limit, totalStudents);
+
+                if (totalStudents === 0) {
+                    paginationInfo.textContent = 'Showing 0 to 0 of 0 entries';
+                } else {
+                    paginationInfo.textContent = `Showing ${start} to ${end} of ${totalStudents} entries`;
+                }
+            }
+
+            function performSearch() {
+                const searchTerm = searchInput.value.trim();
+                loadStudents(1, searchTerm);
+            }
+
+            function addMarkRow(container = document.getElementById('marksContainer')) {
+                const markRow = document.createElement('div');
+                markRow.className = 'mark-row mb-3';
+                markRow.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Subject Name*</label>
+                            <input type="text" class="form-control subject-name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mark*</label>
+                            <input type="number" class="form-control mark-value" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger remove-mark-btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(markRow);
+            }
+
+            function addEditMarkRow() {
+                addMarkRow(document.getElementById('editMarksContainer'));
+            }
+
+            function showAddStudentModal() {
+                document.getElementById('addStudentForm').reset();
+                const marksContainer = document.getElementById('marksContainer');
+                marksContainer.innerHTML = '';
+                addMarkRow(marksContainer);
+
+                document.getElementById('teacherId').value = user.id;
+
+                const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+                modal.show();
+            }
+
+            function addStudent() {
+                const studentName = document.getElementById('studentName').value.trim();
+                const teacherId = document.getElementById('teacherId').value.trim();
+
+                if (!studentName || !teacherId) {
+                    showToast('Validation Error', 'Please fill in all required fields', 'warning');
+                    return;
+                }
+
+                const marks = [];
+                const markRows = document.querySelectorAll('#marksContainer .mark-row');
+
+                markRows.forEach(row => {
+                    const subjectName = row.querySelector('.subject-name').value.trim();
+                    const markValue = row.querySelector('.mark-value').value.trim();
+
+                    if (subjectName && markValue) {
+                        marks.push({
+                            subject_name: subjectName,
+                            mark: parseInt(markValue)
+                        });
+                    }
+                });
+
+                if (marks.length === 0) {
+                    showToast('Validation Error', 'Please add at least one subject mark', 'warning');
+                    return;
+                }
+
+                fetch('http://localhost:8000/add-student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        student_name: studentName,
+                        teacher_id: parseInt(teacherId),
+                        subject_marks: marks
+                    })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showToast('Success', 'Student added successfully!', 'success');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+                        modal.hide();
+                        loadStudents(currentPage, currentSearch);
+                    })
+                    .catch(error => {
+                        console.error('Error adding student:', error);
+                        showToast('Error', 'Failed to add student. Please try again.', 'error');
+                    });
+            }
+
+            function showEditStudentModal(studentId, markId) {
+                const url = new URL('http://localhost:8000/get-student');
+                url.searchParams.append('student_id', studentId);
+                fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(student => {
+                        document.getElementById('editStudentId').value = student.id;
+                        document.getElementById('editStudentName').value = student.student_name || '';
+                        document.getElementById('editTeacherId').value = student.teacher_id || '';
+
+                        const marksContainer = document.getElementById('editMarksContainer');
+                        marksContainer.innerHTML = '';
+
+                        if (student.subject_marks && student.subject_marks.length > 0) {
+                            if (markId) {
+                                const mark = student.subject_marks.find(m => m.id == markId);
+                                if (mark) {
+                                    const markRow = document.createElement('div');
+                                    markRow.className = 'mark-row mb-3';
+                                    markRow.innerHTML = `
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Subject Name*</label>
+                                            <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Mark*</label>
+                                            <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-mark-btn">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" class="mark-id" value="${mark.id}">
+                                `;
+                                    marksContainer.appendChild(markRow);
+                                }
+                            } else {
+                                student.subject_marks.forEach(mark => {
+                                    const markRow = document.createElement('div');
+                                    markRow.className = 'mark-row mb-3';
+                                    markRow.innerHTML = `
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Subject Name*</label>
+                                            <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Mark*</label>
+                                            <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-mark-btn">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" class="mark-id" value="${mark.id}">
+                                `;
+                                    marksContainer.appendChild(markRow);
+                                });
+                            }
+                        } else {
+                            addEditMarkRow();
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching student:', error);
+                        showToast('Error', 'Failed to load student data. Please try again.', 'error');
+                    });
+            }
+
+            function updateStudent() {
+                const studentId = document.getElementById('editStudentId').value;
+                const studentName = document.getElementById('editStudentName').value.trim();
+                const teacherId = document.getElementById('editTeacherId').value.trim();
+
+                if (!studentId || !studentName || !teacherId) {
+                    showToast('Validation Error', 'Please fill in all required fields', 'warning');
+                    return;
+                }
+
+                const marks = [];
+                const markRows = document.querySelectorAll('#editMarksContainer .mark-row');
+
+                markRows.forEach(row => {
+                    const subjectName = row.querySelector('.subject-name').value.trim();
+                    const markValue = row.querySelector('.mark-value').value.trim();
+                    const markId = row.querySelector('.mark-id')?.value;
+
+                    if (subjectName && markValue) {
+                        marks.push({
+                            id: markId ? parseInt(markId) : null,
+                            subject_name: subjectName,
+                            mark: parseInt(markValue)
+                        });
+                    }
+                });
+
+                if (marks.length === 0) {
+                    showToast('Validation Error', 'Please add at least one subject mark', 'warning');
+                    return;
+                }
+                const url = new URL('http://localhost:8000/update-student');
+                url.searchParams.append('student_id', studentId);
+                fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        student_name: studentName,
+                        teacher_id: parseInt(teacherId),
+                        subject_marks: marks
+                    })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showToast('Success', 'Student updated successfully!', 'success');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                        modal.hide();
+                        loadStudents(currentPage, currentSearch);
+                    })
+                    .catch(error => {
+                        console.error('Error updating student:', error);
+                        showToast('Error', 'Failed to update student. Please try again.', 'error');
+                    });
+            }
+
+            function showDeleteStudentModal(studentId, markId) {
+                document.getElementById('deleteStudentId').value = studentId;
+                document.getElementById('deleteStudentModal').dataset.markId = markId || '';
+                const modal = new bootstrap.Modal(document.getElementById('deleteStudentModal'));
+                modal.show();
+            }
+
+            function deleteStudent() {
+                const studentId = document.getElementById('deleteStudentId').value;
+                const markId = document.getElementById('deleteStudentModal').dataset.markId;
+
+                if (!studentId) {
+                    showToast('Error', 'No student selected for deletion', 'error');
+                    return;
+                }
+
+                let deleteUrl = `http://localhost:8000/delete-mark`;
+                const url = new URL(deleteUrl);
+                url.searchParams.append('student_id', studentId);
+                if (markId) {
+                    url.searchParams.append('mark_id', markId);
+                }
+
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showToast('Success', markId ? 'Mark deleted successfully!' : 'Student deleted successfully!', 'success');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteStudentModal'));
+                        modal.hide();
+                        loadStudents(currentPage, currentSearch);
+                    })
+                    .catch(error => {
+                        showToast('Error', 'Failed to delete student. Please try again.', 'error');
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>

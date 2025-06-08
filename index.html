@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <style>
+        .auth-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 600px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding-bottom: 50px;
+        }
+
+        .form-wrapper {
+            position: absolute;
+            width: 100%;
+            height: auto;
+            min-height: 500px;
+            transition: all 0.6s ease-in-out;
+            padding: 30px;
+            background: white;
+        }
+
+        #loginForm {
+            left: 0;
+        }
+
+        #registerForm {
+            left: 100%;
+        }
+
+        .slide-left #loginForm {
+            transform: translateX(-100%);
+        }
+
+        .slide-left #registerForm {
+            transform: translateX(-100%);
+        }
+
+        .toggle-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            width: calc(100% - 60px);
+            margin: 0 auto;
+            background: transparent;
+            border: none;
+            color: #0d6efd;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .toggle-btn:hover {
+            text-decoration: underline;
+        }
+
+        .form-title {
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+
+        .btn-submit {
+            width: 80%;
+            padding: 10px;
+            margin: 15px auto 0;
+            display: block;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-submit:hover {
+            background-color: #333333;
+            color: #ffffff;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+        }
+
+        .password-toggle {
+            cursor: pointer;
+            background-color: #f8f9fa !important;
+            border-left: 0 !important;
+        }
+
+        .form-control {
+            border-right: 0;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-center-wrapper {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+
+        /* Added style for forgot password link */
+        .forgot-password-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-password {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><span style="color: #c90f0f; font-weight: bold;">TelWebs.</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto" id="navLinks">
+                        <li class="nav-item">
+                            <a class="nav-link active auth-toggle" data-form="login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link auth-toggle" data-form="register">Register</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-container">
+                    <div class="form-wrapper" id="loginForm">
+                        <h2 class="form-title">Welcome Back</h2>
+                        <div class="form-center-wrapper">
+                            <form id="loginFormActual">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="loginEmail" placeholder="Email address"
+                                        required>
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="loginPassword"
+                                        placeholder="Password" required>
+                                    <span class="input-group-text password-toggle" id="togglePassword">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </span>
+                                </div>
+                                <!-- forgot password aligned to right -->
+                                <div class="forgot-password-container">
+                                    <a href="#" class="forgot-password">Forgot Password?</a>
+                                </div>
+
+                                <button type="submit" class="btn btn-submit" id="loginSubmit">Login</button>
+                            </form>
+                            <button class="toggle-btn" data-form="register">Don't have an account? Register</button>
+                        </div>
+                    </div>
+
+                    <div class="form-wrapper" id="registerForm">
+                        <h2 class="form-title">Create Account</h2>
+                        <div class="form-center-wrapper">
+                            <form id="registerFormActual">
+                                <div class="mb-3">
+                                    <label for="registerEmail" class="form-label">Email address</label>
+                                    <input type="email" class="form-control" id="registerEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registerPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="registerPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registerConfirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="registerConfirmPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registerPhone" class="form-label">Role</label>
+                                    <select name="role" class="form-select">
+                                        <option value="teacher" class="select-option">Teacher</option>
+                                        <option value="student" class="select-option">Student</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-submit" id="registerSubmit">Register</button>
+                            </form>
+                            <button class="toggle-btn" data-form="login">Already have an account? Login</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-5 p-3 bg-light text-center">
+        <p>Copyright &copy; 2025</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const is_authenticated = localStorage.getItem('is_authenticated');
+            const token = localStorage.getItem('token');
+            const navLinks = document.getElementById('navLinks');
+
+            // Check if user is already authenticated
+            if (is_authenticated && token) {
+                window.location.href = 'dashboard.html';
+            } else {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link active auth-toggle" data-form="login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link auth-toggle" data-form="register">Register</a>
+                    </li>
+                `;
+            }
+
+            const authContainer = document.querySelector('.auth-container');
+            const toggleButtons = document.querySelectorAll('.toggle-btn, .auth-toggle');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const formToShow = this.getAttribute('data-form');
+
+                    if (formToShow === 'login') {
+                        authContainer.classList.remove('slide-left');
+                        document.querySelectorAll('.auth-toggle').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('data-form') === 'login');
+                        });
+                    } else {
+                        authContainer.classList.add('slide-left');
+                        document.querySelectorAll('.auth-toggle').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('data-form') === 'register');
+                        });
+                    }
+                });
+            });
+
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#loginPassword');
+
+            togglePassword.addEventListener('click', function () {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+
+                this.querySelector('i').classList.toggle('bi-eye-fill');
+                this.querySelector('i').classList.toggle('bi-eye-slash-fill');
+            });
+
+            // Login form submission
+            document.getElementById('loginFormActual').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                try {
+                    const response = await fetch('http://localhost:8000/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    console.log("Login response:", data[0]);
+
+                    if (response.ok) {
+                        localStorage.setItem('token', data[0].access_token);
+                        localStorage.setItem('is_authenticated', 'true');
+                        localStorage.setItem('user', JSON.stringify(data[0].user));
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        alert(data.message || 'Login failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred during login');
+                }
+            });
+
+            // Register form submission
+            document.getElementById('registerFormActual').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('registerConfirmPassword').value;
+                const role = document.querySelector('select[name="role"]').value;
+
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('http://localhost:8000/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            role: role
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert('Registration successful! Please login.');
+                        // Switch to login form
+                        authContainer.classList.remove('slide-left');
+                        document.querySelectorAll('.auth-toggle').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('data-form') === 'login');
+                        });
+                    } else {
+                        // Show error message
+                        alert(data.message || 'Registration failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred during registration');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
