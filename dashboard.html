@@ -76,7 +76,8 @@
             border-radius: 0.25rem;
             min-width: 100px;
         }
-        .modal-dialog{
+
+        .modal-dialog {
             padding: 20px;
             width: 80%;
         }
@@ -86,8 +87,7 @@
 <body>
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -135,8 +135,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -169,8 +168,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -189,7 +187,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="viewMarksModal" tabindex="-1" aria-labelledby="viewMarksModalLabel" aria-hidden="true">
+    <div class="modal fade" id="viewMarksModal" tabindex="-1" aria-labelledby="viewMarksModalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -246,7 +244,7 @@
                             <i class="bi bi-search"></i>
                         </button>
                     </div>
-                    
+
                 </div>
 
                 <!-- Student Table -->
@@ -280,7 +278,7 @@
                 </div>
 
                 <button class="btn btn-primary" style="background-color: #000000; color: #ffffff;" id="addStudentBtn">
-                    <i class="bi bi-plus-circle" ></i> Add Student
+                    <i class="bi bi-plus-circle"></i> Add Student
                 </button>
             </div>
         </div>
@@ -292,19 +290,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Authentication check
             const is_authenticated = localStorage.getItem('is_authenticated');
             const token = localStorage.getItem('token');
             const user = JSON.parse(localStorage.getItem('user'));
+
+            // DOM elements
             const navLinks = document.getElementById('navLinks');
             const toastContainer = document.getElementById('toastContainer');
-
             const studentTableBody = document.getElementById('studentTableBody');
             const pagination = document.getElementById('pagination');
             const paginationInfo = document.getElementById('paginationInfo');
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
 
+            // Buttons
             const addStudentBtn = document.getElementById('addStudentBtn');
             const saveStudentBtn = document.getElementById('saveStudentBtn');
             const updateStudentBtn = document.getElementById('updateStudentBtn');
@@ -312,11 +313,13 @@
             const addMarkBtn = document.getElementById('addMarkBtn');
             const addEditMarkBtn = document.getElementById('addEditMarkBtn');
 
+            // Pagination variables
             let currentPage = 1;
             const limit = 10;
             let totalStudents = 0;
             let currentSearch = '';
 
+            // Check authentication
             if (is_authenticated && token && user) {
                 navLinks.innerHTML = `
                     <li class="nav-item">
@@ -328,27 +331,29 @@
                 `;
 
                 document.getElementById('logoutLink')?.addEventListener('click', logout);
-
-                loadStudents();
-
+                await loadStudents();
                 setTimeout(showWelcomeToast, 3000);
             } else {
                 window.location.href = 'index.html';
             }
 
+            // Event listeners
             addStudentBtn.addEventListener('click', showAddStudentModal);
             saveStudentBtn.addEventListener('click', addStudent);
             updateStudentBtn.addEventListener('click', updateStudent);
             confirmDeleteBtn.addEventListener('click', deleteStudent);
             searchBtn.addEventListener('click', performSearch);
             searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
+                if (e.key === 'Enter') performSearch();
             });
 
-            addMarkBtn.addEventListener('click', addMarkRow);
-            addEditMarkBtn.addEventListener('click', addEditMarkRow);
+            // Fixed mark row event listeners
+            addMarkBtn.addEventListener('click', function () {
+                addMarkRow('marksContainer');
+            });
+            addEditMarkBtn.addEventListener('click', function () {
+                addMarkRow('editMarksContainer');
+            });
 
             document.addEventListener('click', function (e) {
                 if (e.target.classList.contains('remove-mark-btn')) {
@@ -356,6 +361,43 @@
                 }
             });
 
+            // Fixed addMarkRow function
+            function addMarkRow(container) {
+                // If container is a string ID, get the element
+                if (typeof container === 'string') {
+                    container = document.getElementById(container);
+                }
+
+                // Validate container exists
+                if (!container || !container.appendChild) {
+                    console.error('Invalid container:', container);
+                    return false;
+                }
+
+                const markRow = document.createElement('div');
+                markRow.className = 'mark-row mb-3';
+                markRow.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Subject Name*</label>
+                            <input type="text" class="form-control subject-name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mark*</label>
+                            <input type="number" class="form-control mark-value" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger remove-mark-btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(markRow);
+                return true;
+            }
+
+            // Rest of your functions remain exactly the same
             function logout() {
                 localStorage.removeItem('is_authenticated');
                 localStorage.removeItem('token');
@@ -409,61 +451,60 @@
                 });
             }
 
-            function loadStudents(page = 1, search = '') {
-                currentPage = page;
-                currentSearch = search;
-                const url = new URL('http://localhost:8000/all-student');
-                url.searchParams.append('is_pagination', true);
-                url.searchParams.append('limit', limit);
-                url.searchParams.append('skip', (page - 1) * limit);
-                if (search) {
-                    url.searchParams.append('search', search);
-                }
-
-                fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+            async function loadStudents(page = 1, search = '') {
+                try {
+                    currentPage = page;
+                    currentSearch = search;
+                    const url = new URL('http://localhost:8000/all-student');
+                    url.searchParams.append('is_pagination', true);
+                    url.searchParams.append('limit', limit);
+                    url.searchParams.append('skip', (page - 1) * limit);
+                    if (search) {
+                        url.searchParams.append('search', search);
                     }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        const flattenedData = [];
-                        data.students.forEach(student => {
-                            if (student.subject_marks && student.subject_marks.length > 0) {
-                                student.subject_marks.forEach(mark => {
-                                    flattenedData.push({
-                                        student_id: student.id,
-                                        student_name: student.student_name,
-                                        subject_name: mark.subject_name,
-                                        mark: mark.mark,
-                                        mark_id: mark.id
-                                    });
-                                });
-                            } else {
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    const flattenedData = [];
+                    data.data.students.forEach(student => {
+                        if (student.subject_marks && student.subject_marks.length > 0) {
+                            student.subject_marks.forEach(mark => {
                                 flattenedData.push({
                                     student_id: student.id,
                                     student_name: student.student_name,
-                                    subject_name: 'No subjects',
-                                    mark: '',
-                                    mark_id: null
+                                    subject_name: mark.subject_name,
+                                    mark: mark.mark,
+                                    mark_id: mark.id
                                 });
-                            }
-                        });
-
-                        totalStudents = flattenedData.length || 0;
-                        renderStudents(flattenedData);
-                        renderPagination();
-                        updatePaginationInfo();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching students:', error);
-                        showToast('Error', 'Failed to load students. Please try again.', 'error');
+                            });
+                        } else {
+                            flattenedData.push({
+                                student_id: student.id,
+                                student_name: student.student_name,
+                                subject_name: 'No subjects',
+                                mark: '',
+                                mark_id: null
+                            });
+                        }
                     });
+
+                    totalStudents = flattenedData.length || 0;
+                    renderStudents(flattenedData);
+                    renderPagination();
+                    updatePaginationInfo();
+                } catch (error) {
+                    console.error('Error fetching students:', error);
+                    showToast('Error', 'Failed to load students. Please try again.', 'error');
+                }
             }
 
             function renderStudents(students) {
@@ -569,43 +610,16 @@
                 }
             }
 
-            function performSearch() {
+            async function performSearch() {
                 const searchTerm = searchInput.value.trim();
-                loadStudents(1, searchTerm);
-            }
-
-            function addMarkRow(container = document.getElementById('marksContainer')) {
-                const markRow = document.createElement('div');
-                markRow.className = 'mark-row mb-3';
-                markRow.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Subject Name*</label>
-                            <input type="text" class="form-control subject-name" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Mark*</label>
-                            <input type="number" class="form-control mark-value" required>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger remove-mark-btn">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(markRow);
-            }
-
-            function addEditMarkRow() {
-                addMarkRow(document.getElementById('editMarksContainer'));
+                await loadStudents(1, searchTerm);
             }
 
             function showAddStudentModal() {
                 document.getElementById('addStudentForm').reset();
                 const marksContainer = document.getElementById('marksContainer');
                 marksContainer.innerHTML = '';
-                addMarkRow(marksContainer);
+                addMarkRow('marksContainer');
 
                 document.getElementById('teacherId').value = user.id;
 
@@ -613,212 +627,211 @@
                 modal.show();
             }
 
-            function addStudent() {
-                const studentName = document.getElementById('studentName').value.trim();
-                const teacherId = document.getElementById('teacherId').value.trim();
+            async function addStudent() {
+                try {
+                    const studentName = document.getElementById('studentName').value.trim();
+                    const teacherId = document.getElementById('teacherId').value.trim();
 
-                if (!studentName || !teacherId) {
-                    showToast('Validation Error', 'Please fill in all required fields', 'warning');
-                    return;
-                }
-
-                const marks = [];
-                const markRows = document.querySelectorAll('#marksContainer .mark-row');
-
-                markRows.forEach(row => {
-                    const subjectName = row.querySelector('.subject-name').value.trim();
-                    const markValue = row.querySelector('.mark-value').value.trim();
-
-                    if (subjectName && markValue) {
-                        marks.push({
-                            subject_name: subjectName,
-                            mark: parseInt(markValue)
-                        });
+                    if (!studentName || !teacherId) {
+                        showToast('Validation Error', 'Please fill in all required fields', 'warning');
+                        return;
                     }
-                });
 
-                if (marks.length === 0) {
-                    showToast('Validation Error', 'Please add at least one subject mark', 'warning');
-                    return;
-                }
+                    const marks = [];
+                    const markRows = document.querySelectorAll('#marksContainer .mark-row');
 
-                fetch('http://localhost:8000/add-student', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        student_name: studentName,
-                        teacher_id: parseInt(teacherId),
-                        subject_marks: marks
-                    })
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                    markRows.forEach(row => {
+                        const subjectName = row.querySelector('.subject-name').value.trim();
+                        const markValue = row.querySelector('.mark-value').value.trim();
+
+                        if (subjectName && markValue) {
+                            marks.push({
+                                subject_name: subjectName,
+                                mark: parseInt(markValue)
+                            });
                         }
-                        return response.json();
-                    })
-                    .then(data => {
+                    });
+
+                    if (marks.length === 0) {
+                        showToast('Validation Error', 'Please add at least one subject mark', 'warning');
+                        return;
+                    }
+
+                    const response = await fetch('http://localhost:8000/add-student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            student_name: studentName,
+                            teacher_id: parseInt(teacherId),
+                            subject_marks: marks
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success === true) {
                         showToast('Success', 'Student added successfully!', 'success');
                         const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
                         modal.hide();
-                        loadStudents(currentPage, currentSearch);
-                    })
-                    .catch(error => {
-                        console.error('Error adding student:', error);
-                        showToast('Error', 'Failed to add student. Please try again.', 'error');
-                    });
+                        await loadStudents(currentPage, currentSearch);
+                    } else {
+                        showToast('Error', data.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error adding student:', error);
+                    showToast('Error', 'Failed to add student. Please try again.', 'error');
+                }
             }
 
-            function showEditStudentModal(studentId, markId) {
-                const url = new URL('http://localhost:8000/get-student');
-                url.searchParams.append('student_id', studentId);
-                fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+            async function showEditStudentModal(studentId, markId) {
+                try {
+                    const url = new URL('http://localhost:8000/get-student');
+                    url.searchParams.append('student_id', studentId);
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                        return response.json();
-                    })
-                    .then(student => {
-                        document.getElementById('editStudentId').value = student.id;
-                        document.getElementById('editStudentName').value = student.student_name || '';
-                        document.getElementById('editTeacherId').value = student.teacher_id || '';
+                    });
 
-                        const marksContainer = document.getElementById('editMarksContainer');
-                        marksContainer.innerHTML = '';
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
 
-                        if (student.subject_marks && student.subject_marks.length > 0) {
-                            if (markId) {
-                                const mark = student.subject_marks.find(m => m.id == markId);
-                                if (mark) {
-                                    const markRow = document.createElement('div');
-                                    markRow.className = 'mark-row mb-3';
-                                    markRow.innerHTML = `
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Subject Name*</label>
-                                            <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Mark*</label>
-                                            <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-mark-btn">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
+                    const student = await response.json();
+                    console.log("Student Data:",student.data);
+                    document.getElementById('editStudentId').value = student.data.id;
+                    document.getElementById('editStudentName').value = student.data.student_name || '';
+                    document.getElementById('editTeacherId').value = student.data.teacher_id || '';
+
+                    const marksContainer = document.getElementById('editMarksContainer');
+                    marksContainer.innerHTML = '';
+
+                    if (student.data.subject_marks && student.data.subject_marks.length > 0) {
+                        if (markId) {
+                            const mark = student.data.subject_marks.find(m => m.id == markId);
+                            if (mark) {
+                                const markRow = document.createElement('div');
+                                markRow.className = 'mark-row mb-3';
+                                markRow.innerHTML = `
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Subject Name*</label>
+                                        <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
                                     </div>
-                                    <input type="hidden" class="mark-id" value="${mark.id}">
-                                `;
-                                    marksContainer.appendChild(markRow);
-                                }
-                            } else {
-                                student.subject_marks.forEach(mark => {
-                                    const markRow = document.createElement('div');
-                                    markRow.className = 'mark-row mb-3';
-                                    markRow.innerHTML = `
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Subject Name*</label>
-                                            <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Mark*</label>
-                                            <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-mark-btn">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Mark*</label>
+                                        <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
                                     </div>
-                                    <input type="hidden" class="mark-id" value="${mark.id}">
-                                `;
-                                    marksContainer.appendChild(markRow);
-                                });
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger remove-mark-btn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="mark-id" value="${mark.id}">
+                            `;
+                                marksContainer.appendChild(markRow);
                             }
                         } else {
-                            addEditMarkRow();
+                            student.data.subject_marks.forEach(mark => {
+                                const markRow = document.createElement('div');
+                                markRow.className = 'mark-row mb-3';
+                                markRow.innerHTML = `
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Subject Name*</label>
+                                        <input type="text" class="form-control subject-name" value="${mark.subject_name || ''}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Mark*</label>
+                                        <input type="number" class="form-control mark-value" value="${mark.mark || ''}" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger remove-mark-btn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="mark-id" value="${mark.id}">
+                            `;
+                                marksContainer.appendChild(markRow);
+                            });
                         }
+                    } else {
+                        addMarkRow('editMarksContainer');
+                    }
 
-                        const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
-                        modal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching student:', error);
-                        showToast('Error', 'Failed to load student data. Please try again.', 'error');
-                    });
+                    const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                    modal.show();
+                } catch (error) {
+                    console.error('Error fetching student:', error);
+                    showToast('Error', 'Failed to load student data. Please try again.', 'error');
+                }
             }
 
-            function updateStudent() {
-                const studentId = document.getElementById('editStudentId').value;
-                const studentName = document.getElementById('editStudentName').value.trim();
-                const teacherId = document.getElementById('editTeacherId').value.trim();
+            async function updateStudent() {
+                try {
+                    const studentId = document.getElementById('editStudentId').value;
+                    const studentName = document.getElementById('editStudentName').value.trim();
+                    const teacherId = document.getElementById('editTeacherId').value.trim();
 
-                if (!studentId || !studentName || !teacherId) {
-                    showToast('Validation Error', 'Please fill in all required fields', 'warning');
-                    return;
-                }
-
-                const marks = [];
-                const markRows = document.querySelectorAll('#editMarksContainer .mark-row');
-
-                markRows.forEach(row => {
-                    const subjectName = row.querySelector('.subject-name').value.trim();
-                    const markValue = row.querySelector('.mark-value').value.trim();
-                    const markId = row.querySelector('.mark-id')?.value;
-
-                    if (subjectName && markValue) {
-                        marks.push({
-                            id: markId ? parseInt(markId) : null,
-                            subject_name: subjectName,
-                            mark: parseInt(markValue)
-                        });
+                    if (!studentId || !studentName || !teacherId) {
+                        showToast('Validation Error', 'Please fill in all required fields', 'warning');
+                        return;
                     }
-                });
 
-                if (marks.length === 0) {
-                    showToast('Validation Error', 'Please add at least one subject mark', 'warning');
-                    return;
-                }
-                const url = new URL('http://localhost:8000/update-student');
-                url.searchParams.append('student_id', studentId);
-                fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        student_name: studentName,
-                        teacher_id: parseInt(teacherId),
-                        subject_marks: marks
-                    })
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                    const marks = [];
+                    const markRows = document.querySelectorAll('#editMarksContainer .mark-row');
+
+                    markRows.forEach(row => {
+                        const subjectName = row.querySelector('.subject-name').value.trim();
+                        const markValue = row.querySelector('.mark-value').value.trim();
+                        const markId = row.querySelector('.mark-id')?.value;
+
+                        if (subjectName && markValue) {
+                            marks.push({
+                                id: markId ? parseInt(markId) : null,
+                                subject_name: subjectName,
+                                mark: parseInt(markValue)
+                            });
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        showToast('Success', 'Student updated successfully!', 'success');
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
-                        modal.hide();
-                        loadStudents(currentPage, currentSearch);
-                    })
-                    .catch(error => {
-                        console.error('Error updating student:', error);
-                        showToast('Error', 'Failed to update student. Please try again.', 'error');
                     });
+
+                    if (marks.length === 0) {
+                        showToast('Validation Error', 'Please add at least one subject mark', 'warning');
+                        return;
+                    }
+                    const url = new URL('http://localhost:8000/update-student');
+                    url.searchParams.append('student_id', studentId);
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            student_name: studentName,
+                            teacher_id: parseInt(teacherId),
+                            subject_marks: marks
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    console.log("Updated Student Data:",data);
+                    showToast('Success', 'Student updated successfully!', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                    modal.hide();
+                    await loadStudents(currentPage, currentSearch);
+                } catch (error) {
+                    console.error('Error updating student:', error);
+                    showToast('Error', 'Failed to update student. Please try again.', 'error');
+                }
             }
 
             function showDeleteStudentModal(studentId, markId) {
@@ -828,43 +841,42 @@
                 modal.show();
             }
 
-            function deleteStudent() {
-                const studentId = document.getElementById('deleteStudentId').value;
-                const markId = document.getElementById('deleteStudentModal').dataset.markId;
+            async function deleteStudent() {
+                try {
+                    const studentId = document.getElementById('deleteStudentId').value;
+                    const markId = document.getElementById('deleteStudentModal').dataset.markId;
 
-                if (!studentId) {
-                    showToast('Error', 'No student selected for deletion', 'error');
-                    return;
-                }
-
-                let deleteUrl = `http://localhost:8000/delete-mark`;
-                const url = new URL(deleteUrl);
-                url.searchParams.append('student_id', studentId);
-                if (markId) {
-                    url.searchParams.append('mark_id', markId);
-                }
-
-                fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+                    if (!studentId) {
+                        showToast('Error', 'No student selected for deletion', 'error');
+                        return;
                     }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+
+                    let deleteUrl = `http://localhost:8000/delete-mark`;
+                    const url = new URL(deleteUrl);
+                    url.searchParams.append('student_id', studentId);
+                    if (markId) {
+                        url.searchParams.append('mark_id', markId);
+                    }
+
+                    const response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        showToast('Success', markId ? 'Mark deleted successfully!' : 'Student deleted successfully!', 'success');
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteStudentModal'));
-                        modal.hide();
-                        loadStudents(currentPage, currentSearch);
-                    })
-                    .catch(error => {
-                        showToast('Error', 'Failed to delete student. Please try again.', 'error');
                     });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    showToast('Success', markId ? 'Mark deleted successfully!' : 'Student deleted successfully!', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteStudentModal'));
+                    modal.hide();
+                    await loadStudents(currentPage, currentSearch);
+                } catch (error) {
+                    showToast('Error', 'Failed to delete student. Please try again.', 'error');
+                }
             }
         });
     </script>

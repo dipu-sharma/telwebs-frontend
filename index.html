@@ -203,11 +203,11 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="registerPassword" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="registerPassword" required>
+                                    <input type="password" name="password" class="form-control" id="registerPassword" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="registerConfirmPassword" class="form-label">Confirm Password</label>
-                                    <input type="password" class="form-control" id="registerConfirmPassword" required>
+                                    <input type="password" name="confirm_password" class="form-control" id="registerConfirmPassword" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="registerPhone" class="form-label">Role</label>
@@ -342,6 +342,7 @@
                         body: JSON.stringify({
                             email: email,
                             password: password,
+                            confirm_password: confirmPassword,
                             role: role
                         })
                     });
