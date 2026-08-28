@@ -1,0 +1,439 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design tokens
+   One token set drives both themes. Dark is the default; `.light` on <html>
+   flips the surface/ink ramps and darkens the accents for AA contrast.
+   ========================================================================== */
+@layer base {
+  :root {
+    --c-bg: 8 7 12;
+    --c-surface: 18 17 26;
+    --c-elevated: 25 23 36;
+    --c-line: 44 41 60;
+    --c-ink: 237 235 245;
+    --c-muted: 154 150 174;
+    --c-violet: 124 92 255;
+    --c-amber: 255 138 61;
+
+    --glass-bg: 255 255 255;
+    --glass-alpha: 0.045;
+    --grid-alpha: 0.05;
+    --aurora-alpha: 0.5;
+
+    color-scheme: dark;
+  }
+
+  html.light {
+    --c-bg: 246 245 250;
+    --c-surface: 255 255 255;
+    --c-elevated: 255 255 255;
+    --c-line: 224 221 236;
+    --c-ink: 22 20 33;
+    --c-muted: 92 88 112;
+    --c-violet: 91 60 226;
+    --c-amber: 200 84 12;
+
+    --glass-bg: 255 255 255;
+    --glass-alpha: 0.72;
+    --grid-alpha: 0.035;
+    --aurora-alpha: 0.22;
+
+    color-scheme: light;
+  }
+
+  /* Smooth scrolling, but never fight a reduced-motion preference */
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchor targets so the sticky nav never covers a heading */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: rgb(var(--c-violet) / 0.32);
+    color: rgb(var(--c-ink));
+  }
+
+  /* Visible, on-brand keyboard focus everywhere */
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-violet));
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-semibold text-balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Themed scrollbar */
+  * {
+    scrollbar-color: rgb(var(--c-line)) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--c-bg));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--c-line));
+    border-radius: 999px;
+    border: 2px solid rgb(var(--c-bg));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--c-violet) / 0.6);
+  }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-shell px-5 sm:px-8 lg:px-10;
+  }
+
+  /* Glassmorphism surface */
+  .glass {
+    background: rgb(var(--glass-bg) / var(--glass-alpha));
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgb(var(--c-line) / 0.85);
+  }
+
+  .card {
+    @apply glass rounded-card;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition: transform 0.5s theme('transitionTimingFunction.smooth'),
+      border-color 0.4s ease, box-shadow 0.5s ease;
+  }
+
+  /* Hairline gradient top edge — reads as a "lit" panel */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--c-violet) / 0.55),
+      rgb(var(--c-amber) / 0.4),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    border-color: rgb(var(--c-violet) / 0.45);
+    box-shadow: 0 22px 60px -28px rgb(var(--c-violet) / 0.5);
+  }
+  .card-hover:hover::before {
+    opacity: 1;
+  }
+
+  /* Mono eyebrow label — the structural device across sections */
+  .eyebrow {
+    @apply font-mono text-eyebrow font-medium uppercase;
+    color: rgb(var(--c-muted));
+  }
+
+  .gradient-text {
+    background: linear-gradient(
+      100deg,
+      rgb(var(--c-ink)) 0%,
+      rgb(var(--c-violet)) 46%,
+      rgb(var(--c-amber)) 92%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .accent-text {
+    background: linear-gradient(96deg, rgb(var(--c-violet)), rgb(var(--c-amber)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* --- Buttons --- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-pill
+           px-5 py-3 font-medium leading-none;
+    font-size: 0.9375rem;
+    transition: transform 0.35s theme('transitionTimingFunction.smooth'),
+      box-shadow 0.35s ease, background-color 0.3s ease, border-color 0.3s ease,
+      color 0.3s ease, opacity 0.3s ease;
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  .btn-primary {
+    background: linear-gradient(100deg, rgb(var(--c-violet)), rgb(var(--c-amber)));
+    color: #fff;
+    box-shadow: 0 14px 34px -14px rgb(var(--c-violet) / 0.75);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 20px 44px -14px rgb(var(--c-violet) / 0.9);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    @apply glass;
+    color: rgb(var(--c-ink));
+  }
+  .btn-ghost:hover {
+    border-color: rgb(var(--c-violet) / 0.55);
+    background: rgb(var(--c-violet) / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .btn-quiet {
+    color: rgb(var(--c-muted));
+  }
+  .btn-quiet:hover {
+    color: rgb(var(--c-ink));
+    background: rgb(var(--glass-bg) / var(--glass-alpha));
+  }
+
+  .btn-sm {
+    @apply px-3.5 py-2;
+    font-size: 0.8125rem;
+  }
+
+  /* --- Pills / tags --- */
+  .tag {
+    @apply inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-mono;
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    border-color: rgb(var(--c-line));
+    color: rgb(var(--c-muted));
+    background: rgb(var(--glass-bg) / calc(var(--glass-alpha) * 0.8));
+    transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+  }
+  .tag-active {
+    border-color: rgb(var(--c-violet) / 0.6);
+    color: rgb(var(--c-ink));
+    background: rgb(var(--c-violet) / 0.16);
+  }
+
+  /* --- Inputs --- */
+  .field {
+    @apply w-full rounded-xl px-4 py-3 text-[0.9375rem];
+    background: rgb(var(--glass-bg) / calc(var(--glass-alpha) * 1.4));
+    border: 1px solid rgb(var(--c-line));
+    color: rgb(var(--c-ink));
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  }
+  .field::placeholder {
+    color: rgb(var(--c-muted) / 0.7);
+  }
+  .field:focus {
+    outline: none;
+    border-color: rgb(var(--c-violet) / 0.75);
+    box-shadow: 0 0 0 4px rgb(var(--c-violet) / 0.16);
+  }
+  .field-error {
+    border-color: rgb(248 113 113 / 0.8);
+  }
+  .field-error:focus {
+    border-color: rgb(248 113 113);
+    box-shadow: 0 0 0 4px rgb(248 113 113 / 0.16);
+  }
+
+  /* Section rhythm */
+  .section {
+    @apply relative py-24 sm:py-28 lg:py-36;
+  }
+
+  /* Hairline rule that fades at both ends */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--c-line)),
+      transparent
+    );
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+@layer utilities {
+  /* Ambient background: drifting violet/amber aurora + technical grid */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    background: rgb(var(--c-bg));
+  }
+  .aurora::before,
+  .aurora::after {
+    content: '';
+    position: absolute;
+    width: 62vmax;
+    height: 62vmax;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: var(--aurora-alpha);
+    will-change: transform;
+  }
+  .aurora::before {
+    top: -22vmax;
+    left: -12vmax;
+    background: radial-gradient(
+      circle at center,
+      rgb(var(--c-violet) / 0.75),
+      transparent 62%
+    );
+    animation: drift 22s ease-in-out infinite;
+  }
+  .aurora::after {
+    right: -18vmax;
+    top: 18vmax;
+    background: radial-gradient(
+      circle at center,
+      rgb(var(--c-amber) / 0.5),
+      transparent 62%
+    );
+    animation: drift-slow 30s ease-in-out infinite;
+  }
+
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: linear-gradient(
+        to right,
+        rgb(var(--c-ink) / var(--grid-alpha)) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        rgb(var(--c-ink) / var(--grid-alpha)) 1px,
+        transparent 1px
+      );
+    background-size: 72px 72px;
+    /* Fade the grid out toward the edges so it reads as atmosphere */
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+  }
+
+  /* Cursor spotlight — follows the pointer, sits under content */
+  .cursor-glow {
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+    width: 34rem;
+    height: 34rem;
+    border-radius: 50%;
+    left: 0;
+    top: 0;
+    background: radial-gradient(
+      circle at center,
+      rgb(var(--c-violet) / 0.14),
+      transparent 68%
+    );
+    transform: translate3d(-50%, -50%, 0);
+    transition: opacity 0.5s ease;
+    will-change: transform;
+  }
+
+  /* Scroll reveal: set by the v-reveal directive */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.75s theme('transitionTimingFunction.smooth'),
+      transform 0.75s theme('transitionTimingFunction.smooth');
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  .reveal-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Nuxt page transition */
+  .page-enter-active,
+  .page-leave-active {
+    transition: opacity 0.35s ease, transform 0.35s theme('transitionTimingFunction.smooth');
+  }
+  .page-enter-from,
+  .page-leave-to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Edge-fading mask for marquees */
+  .mask-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ==========================================================================
+   Accessibility: honour reduced motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .cursor-glow {
+    display: none;
+  }
+}
